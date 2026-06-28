@@ -1,25 +1,23 @@
 const express = require('express');
+const tourRouter = require('./routes/tourRoutes');
 
 const app = express();
 const port = 8000;
 
-app.get('/test1', (req, res) => {
-  res.status(200).send('GET request successfull');
+app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log('Hello from logger Middleware!!');
+  next();
 });
 
-app.post('/test1', (req, res) => {
-  res.status(201).send('POST request successfull');
+app.use((req, res, next) => {
+  console.log('Hello from requestTime middleware!!');
+  req.requestTime = new Date().toISOString();
+  next();
 });
 
-app.get('/test2', (req, res) => {
-  res.status(200).send('GET request successfull');
-});
-
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Hello from Server',
-  });
-});
+app.use('/api/v1/tours', tourRouter);
 
 app.listen(port, () => {
   console.log(`Server is up and running on port: ${port}`);

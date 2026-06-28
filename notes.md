@@ -1,4 +1,6 @@
-Express:
+##Express:
+
+# DAY 1
 
 -> Express is a minimal node.js framework which provides a layer of abstraction.
 -> Express has a lot of features such as: complex routing, easier handling of requests and responsees, middleware,
@@ -30,7 +32,7 @@ Eg:
 
 #REST API (Representational State Transfer)
 
-## Rules:
+# Rules:
 
 1. Separate the APIs into logical resources.
    Resource: Object or representation of something which has data associated to it. Eg: users, tours, reviews etc.
@@ -63,3 +65,31 @@ Eg:
 
    /tours/page/3 -> Client sends the page details which it expects and server just processes it.
    CORRECT (As per REST archietecture)
+
+# DAY 2
+
+JSEN pattern of sending responses:
+
+Response structure:
+
+```
+{
+   status: 'fail'/'error'/'success',
+   data: {
+   // Data to be sent as part of the response
+   }
+}
+```
+
+If there is a 400 ish error such as 404, 403, 401, 400, we send status as 'fail'
+If there is a 500 ish error such as 500, 503, we send status as 'error'
+If there is no error, we send status as 'success'
+
+By default express ignores any body data that has been sent as part of an http request.
+If we want express to include the body data and parse it as json, we need to use a middleware function called express.json()
+
+Eg: app.use(express.json())
+
+## Middleware Chain:
+
+A middleware chain in Express is the sequence of middleware functions that a request passes through before reaching the final route handler or response.
