@@ -1,10 +1,19 @@
 const express = require('express');
+const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
 
 const app = express();
 const port = 8000;
 
-app.use(express.json());
+// Middlewares
+app.use(express.json()); // Here express.json is not a middleware. The function which it returns is the middleware
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+app.use(express.static(`${__dirname}/public`)); // To expose static assets inside public folder
 
 app.use((req, res, next) => {
   console.log('Hello from logger Middleware!!');
@@ -17,8 +26,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Routers
 app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/users', userRouter);
 
+// Start Server
 app.listen(port, () => {
   console.log(`Server is up and running on port: ${port}`);
 });

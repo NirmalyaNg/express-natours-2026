@@ -93,3 +93,22 @@ Eg: app.use(express.json())
 ## Middleware Chain:
 
 A middleware chain in Express is the sequence of middleware functions that a request passes through before reaching the final route handler or response.
+
+# DAY 3
+
+The server can expose static assets from inside a particular folder using express.static() method which returns a middleware.
+We need to pass the path to the folder containing the assets as an argument.
+
+When we set environment variables, node makes them available inside process.env object along with other internal environment
+variables.
+
+In the latest versions of node, while executing a module, we can specify the environment variable file using below syntax:
+node --env-file=.env module_name
+
+## Setting env variables through Scripts
+
+Here we define two scripts which will set environment variable NODE_ENV to development/production.
+We use cross-env package so that the script can be run on any operating system
+
+"start:dev": "cross-env NODE_ENV=development node app.js",
+"start:prod": "cross-env NODE_ENV=production node app.js"
