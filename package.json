@@ -2,15 +2,16 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "Node.js learning",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start:dev": "cross-env NODE_ENV=development node app.js",
-    "start:prod": "cross-env NODE_ENV=production node app.js"
+    "start:dev": "cross-env NODE_ENV=development node --env-file=.env server.js",
+    "start:prod": "cross-env NODE_ENV=production node --env-file=.env server.js"
   },
   "author": "Nirmalya Ganguly",
   "license": "ISC",
   "dependencies": {
     "express": "^5.2.1",
+    "mongoose": "^9.7.3",
     "morgan": "^1.11.0"
   },
   "devDependencies": {

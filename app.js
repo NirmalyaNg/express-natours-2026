@@ -4,7 +4,6 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
 const app = express();
-const port = 8000;
 
 // Middlewares
 app.use(express.json()); // Here express.json is not a middleware. The function which it returns is the middleware
@@ -30,7 +29,4 @@ app.use((req, res, next) => {
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
-// Start Server
-app.listen(port, () => {
-  console.log(`Server is up and running on port: ${port}`);
-});
+module.exports = app;
