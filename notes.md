@@ -258,3 +258,31 @@ Example: Sharding a MongoDB collection across multiple servers, where each shard
    validations etc.
 5. Once we create the schema for our data using mongoose, we can create a model which serves as a wrapper for the schema
    and which helps us to query the database and perform CRUD operations.
+
+## DAY 5
+
+When we create a mongoose schema and configure a field which has a type of array and want to ensure that the
+array contains atleast one element, then we can't use required: true. Because required just checks if the value
+exists. It doesnt check if there is atleast an element inside the array. In that case we need to use a custom
+validator:
+
+```js
+startDates: {
+   type: [Date],
+   validate: {
+   validator: (value) => {
+      if (value.length > 0) return;
+         return 'A tour must have atleast one start date';
+      },
+   },
+},
+```
+
+# MVC
+
+When a request comes to our server, it is processed by a router. The router uses its own controller,
+which in turn uses Models to interact with the DB. The model sends data back to the controller,
+and the controller sends the response back to the client.
+
+We should have application logic inside controllers and business logic inside models.
+Thin controllers and fat models.

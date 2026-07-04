@@ -1,59 +1,69 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const Tour = require('../models/tourModel');
 const pathToFile = path.join(__dirname, '../dev-data/data/tours-simple.json');
 
 const tours = JSON.parse(fs.readFileSync(pathToFile, 'utf-8')); // Data will be read from json file as string, so we need to parse the data into js array
 
-exports.getAllTours = (req, res) => {
-  return res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-};
-
-exports.getTour = (req, res) => {
-  const id = req.params.id; // All route params are strings
-  const tour = tours.find((tour) => tour.id === +id);
-  console.log('RequestTime: ', req.requestTime);
-
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      error: 'Invalid ID',
+exports.getAllTours = async (req, res) => {
+  try {
+    const tours = await Tour.find();
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err,
     });
   }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
 };
 
-exports.createTour = (req, res) => {
-  const newTour = {
-    id: tours.length,
-    ...req.body,
-  };
-  tours.push(newTour);
-  fs.writeFile(pathToFile, JSON.stringify(tours), 'utf-8', (error) => {
-    if (error) {
-      return res.status(500).json({
-        status: 'error',
-        error: error.message,
+exports.getTour = async (req, res) => {
+  try {
+    const tourId = req.params.id;
+    const tour = await Tour.findById(tourId);
+    if (!tour) {
+      return res.status(404).json({
+        status: 'fail',
+        error: 'Tour not found',
       });
     }
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err,
+    });
+  }
+};
+
+exports.createTour = async (req, res) => {
+  try {
+    // const tour = new Tour(req.body);
+    // await tour.save();
+    const tour = await Tour.create(req.body);
     res.status(201).json({
       status: 'success',
       data: {
-        tour: newTour,
+        tour,
       },
     });
-  });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      error: err,
+    });
+  }
 };
 
 exports.updateTour = (req, res) => {
@@ -62,6 +72,24 @@ exports.updateTour = (req, res) => {
   });
 };
 
-exports.deleteTour = (req, res) => {
-  res.status(204).send();
+exports.deleteTour = async (req, res) => {
+  try {
+    const tourId = req.params.id;
+    const tour = await Tour.findByIdAndDelete(tourId);
+    if (!tour) {
+      return res.status(404).json({
+        status: 'fail',
+        error: 'Tour not found',
+      });
+    }
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err,
+    });
+  }
 };
