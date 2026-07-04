@@ -286,3 +286,4 @@ and the controller sends the response back to the client.
 
 We should have application logic inside controllers and business logic inside models.
 Thin controllers and fat models.
+Controllers should be as lean as possible.
