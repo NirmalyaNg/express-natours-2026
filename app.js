@@ -5,6 +5,9 @@ const userRouter = require('./routes/userRoutes');
 
 const app = express();
 
+// To extend the behavior of express query parser
+app.set('query parser', 'extended');
+
 // Middlewares
 app.use(express.json()); // Here express.json is not a middleware. The function which it returns is the middleware
 
