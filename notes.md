@@ -287,3 +287,24 @@ and the controller sends the response back to the client.
 We should have application logic inside controllers and business logic inside models.
 Thin controllers and fat models.
 Controllers should be as lean as possible.
+
+# Aggregation
+
+The aggregation pipeline is basically a series of stages you chain together, each one transforming the documents that come out of the previous stage.
+This is done mostly on the MongoDB side instead of in JS.
+
+Basic syntax:
+
+```js
+const stats = await Model.aggregate([
+  {
+    /* stage 1 */
+  },
+  {
+    /* stage 2 */
+  },
+  {
+    /* stage 3 */
+  },
+]);
+```
