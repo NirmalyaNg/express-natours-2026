@@ -96,7 +96,67 @@ exports.getTourStats = async (req, res) => {
         stats,
       },
     });
-  } catch (error) {
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err.message,
+    });
+  }
+};
+
+exports.getMonthlyTourPlan = async (req, res) => {
+  const year = req.params.year;
+  if (!year) {
+    return res.status(400).json({
+      status: 'fail',
+      error: 'Year is required',
+    });
+  }
+
+  try {
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates', // Convert attribute having array to single value
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' }, // To group tours using the month of the startDates
+          numTourStarts: { $sum: 1 }, // To create a count of all tours starting for that month
+          tours: { $push: '$name' }, // To create an array of tour names beloning to that month
+        },
+      },
+      {
+        $addFields: {
+          month: '$_id', // We will create a new attribute called month for each group and reuse the value of _id
+        },
+      },
+      {
+        $project: {
+          _id: 0, // By specifying a value of 0, we indicate that we do not want to keep the _id attribute for each group
+        },
+      },
+      {
+        $sort: {
+          numTourStarts: -1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        plan,
+      },
+    });
+  } catch (err) {
     res.status(500).json({
       status: 'error',
       error: err.message,
