@@ -308,3 +308,18 @@ const stats = await Model.aggregate([
   },
 ]);
 ```
+
+# Mongoose middlewares
+
+There are 4 types of middlewares in mongoose:
+
+1. Document middleware
+2. Query middleware
+3. Aggregation Middleware
+4. Model middleware
+
+Pre-save middleware -> This middleware function gets executed right before the document is getting saved into the DB
+Post-save middleware -> This middleware function gets executed right after the document is saved to the DB
+
+!!!!IMP!!!!
+The pre and post save middlewares are only executed if we create a new document using .create / .save and not insertMany.
