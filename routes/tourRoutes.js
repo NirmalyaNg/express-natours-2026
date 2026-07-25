@@ -12,6 +12,10 @@ router.get('/tour-stats', tourController.getTourStats);
 
 router.get('/monthly-tour-plan/:year', tourController.getMonthlyTourPlan);
 
-router.route('/:id').get(tourController.getTour).patch(tourController.updateTour).delete(tourController.deleteTour);
+router
+  .route('/:id')
+  .get(tourController.getTour)
+  .patch(tourController.updateTour)
+  .delete(authMiddleware.protect, authMiddleware.restrict('lead-guide', 'admin'), tourController.deleteTour);
 
 module.exports = router;

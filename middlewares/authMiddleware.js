@@ -21,10 +21,19 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new AppError('User is no longer found', 401));
   }
   // Check if user has changed password
-  const passwordChanged = user.checkIfPasswordChanged(decoded.iat);
+  const passwordChanged = user.passwordChangedAfter(decoded.iat);
   if (passwordChanged) {
     return next(new AppError('User has changed password. Please login again', 401));
   }
   req.user = user;
   next();
 });
+
+exports.restrict = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('You do not have sufficient permission for performing this action', 403));
+    }
+    next();
+  };
+};
