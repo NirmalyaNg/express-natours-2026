@@ -4,6 +4,16 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const sendEmail = require('../utils/sendEmail');
 
+const generateAndSendToken = (user, statusCode, res, includeUser = false) => {
+  const token = user.generateJWT();
+  const { password: _, ...userWithoutPassword } = user.toObject();
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    ...(includeUser ? { user: userWithoutPassword } : {}),
+  });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   const { name, email, password, passwordConfirm, passwordChangedAt } = req.body || {};
   const newUser = await User.create({
@@ -12,16 +22,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     password,
     passwordConfirm,
   });
-  const token = newUser.generateJWT();
-  const { password: _, ...userWithoutPassword } = newUser.toObject();
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: userWithoutPassword,
-    },
-  });
+  // Generate new token and send response
+  generateAndSendToken(newUser, 201, res, true);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -30,16 +32,13 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password) {
     return next(new AppError('Email and/or password is missing', 400));
   }
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email });
   // Check if email or password is incorrect
   if (!user || !(await user.checkPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
-  const token = user.generateJWT();
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  // Generate new token and send response
+  generateAndSendToken(user, 200, res);
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -83,7 +82,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-  console.log(hashedResetToken);
   // Find user who has a matching hashed reset token and check if reset token has not been expired
   const user = await User.findOne({
     passwordResetToken: hashedResetToken,
@@ -99,11 +97,26 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetTokenExpiresAt = undefined;
   // Save user
   await user.save();
-  // Generate token
-  const token = user.generateJWT();
+  // Generate new token and send response
+  generateAndSendToken(user, 200, res);
+});
 
-  return res.status(200).json({
-    status: 'success',
-    token,
-  });
+exports.changeMyPassword = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  const { currentPassword, newPassword, newPasswordConfirm } = req.body || {};
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return next(new AppError('Current password, new password and confirm new password are required', 400));
+  }
+
+  // Check if current password is correct
+  if (!(await user.checkPassword(currentPassword, user.password))) {
+    return next(new AppError('Current password is not correct.', 400));
+  }
+  // Update new password
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirm;
+  // Save updated user document
+  await user.save();
+  // Generate new token and send response
+  generateAndSendToken(user, 200, res);
 });

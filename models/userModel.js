@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema(
     photo: String,
     password: {
       type: String,
-      select: false,
       required: [true, 'Password is required'],
       minlength: [8, 'Password should have atleast 8 characters'],
     },
@@ -39,6 +38,11 @@ const userSchema = new mongoose.Schema(
         },
         message: 'Passwords do not match',
       },
+    },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -88,6 +92,21 @@ userSchema.methods.generatePasswordResetToken = function () {
   this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000;
   return resetToken;
 };
+
+// Remove sensitive fields from user object when sending response
+userSchema.methods.toJSON = function () {
+  const userObject = this.toObject();
+  // Remove sensitive fields
+  delete userObject.password;
+  delete userObject.__v;
+  delete userObject.passwordChangedAt;
+  return userObject;
+};
+
+// Query middleware to filter out inactive users
+userSchema.pre(/^find/, function () {
+  this.find({ active: { $ne: false } });
+});
 
 const User = mongoose.model('User', userSchema);
 
