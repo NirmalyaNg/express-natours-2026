@@ -6,11 +6,19 @@ const sendEmail = require('../utils/sendEmail');
 
 const generateAndSendToken = (user, statusCode, res, includeUser = false) => {
   const token = user.generateJWT();
-  const { password: _, ...userWithoutPassword } = user.toObject();
+
+  const cookieOptions = {
+    httpOnly: true,
+    expires: new Date(Date.now() + +process.env.JWT_COOKIE_EXPIRES_IN_SEC * 1000), // 1h
+  };
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions['secure'] = true;
+  }
+  res.cookie('jwt', token, cookieOptions);
+
   res.status(statusCode).json({
     status: 'success',
-    token,
-    ...(includeUser ? { user: userWithoutPassword } : {}),
+    ...(includeUser ? { user } : {}),
   });
 };
 
