@@ -68,7 +68,7 @@ userSchema.pre('save', function () {
 
 // Generate JWT for user
 userSchema.methods.generateJWT = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN_SEC * 1000 });
 };
 
 // Check if passwords match
