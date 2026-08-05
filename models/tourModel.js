@@ -59,6 +59,10 @@ const tourSchema = new mongoose.Schema(
     slug: {
       type: String,
     },
+    secret: {
+      type: Boolean,
+      default: false,
+    },
     description: {
       type: String,
       trim: true,
@@ -94,13 +98,35 @@ tourSchema.virtual('durationWeeks').get(function () {
 // Document middleware
 // Pre-save middleware -> This middleware function gets executed right before the document is getting saved into the DB
 tourSchema.pre('save', function () {
-  // Here this will point to the document that is getting saved to database
+  // Make sure to define the slug attribute on the tour schema
   this.slug = slugify(this.name, { lower: true });
 });
 
-// Post-save middleware -> This middleware function gets executed right after the document is saved to the DB
+// Post-save middleware -> This middleware function gets executed right after the document has been saved into the DB
 tourSchema.post('save', function (doc) {
-  console.log(doc);
+  console.log('Post save document middleware executed. Saved Document: ', doc);
+});
+
+// Query middleware
+// Pre-find middleware -> This middleware function gets executed right before queries starting with find is executed
+tourSchema.pre(/^find/, function () {
+  this.find({
+    secret: {
+      $ne: true,
+    },
+  });
+});
+
+// Aggregation middleware
+// Pre-aggregate middleware -> This middleware function gets executed right before the aggregation pipeline is executed
+tourSchema.pre('aggregate', function () {
+  this.pipeline().unshift({
+    $match: {
+      secret: {
+        $ne: true,
+      },
+    },
+  });
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
