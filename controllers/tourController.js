@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const Tour = require('../models/tourModel');
 const ApiFeatures = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
 
 exports.aliasTop5Cheap = (req, res, next) => {
   // Since in express 5, req.query object is readonly so we cannot modify it
@@ -164,28 +165,18 @@ exports.getMonthlyTourPlan = async (req, res) => {
   }
 };
 
-exports.getTour = async (req, res) => {
-  try {
-    const tourId = req.params.id;
-    const tour = await Tour.findById(tourId);
-    if (!tour) {
-      return res.status(404).json({
-        status: 'fail',
-        error: 'Tour not found',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: {
-        tour,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      error: err,
-    });
+exports.getTour = async (req, res, next) => {
+  const tourId = req.params.id;
+  const tour = await Tour.findById(tourId);
+  if (!tour) {
+    return next(new AppError(`Tour with id ${tourId} not found!`, 404));
   }
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour,
+    },
+  });
 };
 
 exports.createTour = async (req, res) => {
