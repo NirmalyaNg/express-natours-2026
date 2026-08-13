@@ -9,14 +9,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const globalErrorMiddleware = require('./middlewares/globalError');
 const AppError = require('./utils/appError');
-
-// Uncaught exception
-process.on('uncaughtException', (error) => {
-  console.log('UNCAUGHT EXCEPTION! Shutting down..');
-  console.log(error.name, error.message);
-  process.exit(1);
-});
 
 const app = express();
 
@@ -103,13 +97,15 @@ app.use((req, res, next) => {
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
-// Handle invalid routes
-app.all('*splat', (req, res, next) => {
-  const appError = new AppError(`Cannot access ${req.originalUrl} on the server`, 404);
-  next(appError);
+// Catch all unhandled routes
+app.all('/*splat', (req, res, next) => {
+  // throw new Error(`Cannot find ${req.originalUrl} on the server`);
+  // const error = new Error(`Cannot find ${req.originalUrl} on the server`);
+  // error.statusCode = 404;
+  next(new AppError(`Cannot find ${req.originalUrl} on the server`, 404));
 });
 
-// Global Error Handler
-app.use(globalErrorHandler);
+// This is a global error handling middleware. It will be called whenever next() is called with an argument or an error is thrown in any of the routes or middlewares.
+app.use(globalErrorMiddleware);
 
 module.exports = app;
