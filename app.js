@@ -7,6 +7,16 @@ const AppError = require('./utils/appError');
 
 const app = express();
 
+// To trigger uncaught exception
+// console.log(x + y);
+
+// To trigger unhandled rejection
+// new Promise((resolve, reject) => {
+//   setTimeout(() => {
+//     reject(new Error('Custom error'))
+//   }, 5000);
+// })
+
 // To extend the behavior of express query parser
 app.set('query parser', 'extended');
 

@@ -4,4 +4,12 @@ function connectDB() {
   return mongoose.connect(process.env.MONGODB_URL);
 }
 
-module.exports = connectDB;
+connectDB()
+  .then((conn) => {
+    console.log('Connected to database. Host:', conn.connection.host);
+    // Start Server
+  })
+  .catch((error) => {
+    console.log('Failed to connect to database. Error: ', error);
+    process.exit(1);
+  });
