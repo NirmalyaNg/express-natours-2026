@@ -177,10 +177,7 @@ exports.deleteTour = async (req, res) => {
   const tourId = req.params.id;
   const tour = await Tour.findByIdAndDelete(tourId);
   if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      error: 'Tour not found',
-    });
+    return next(new AppError(`Tour with id ${tourId} not found!`, 404));
   }
   res.status(204).json({
     status: 'success',
