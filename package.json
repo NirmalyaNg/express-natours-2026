@@ -12,10 +12,12 @@
   "author": "Nirmalya Ganguly",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "express": "^5.2.1",
     "mongoose": "^9.7.3",
     "morgan": "^1.11.0",
-    "slugify": "^1.6.9"
+    "slugify": "^1.6.9",
+    "validator": "^13.15.35"
   },
   "devDependencies": {
     "cross-env": "^10.1.0"
