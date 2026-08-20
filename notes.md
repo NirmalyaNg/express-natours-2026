@@ -323,3 +323,49 @@ Post-save middleware -> This middleware function gets executed right after the d
 
 !!!!IMP!!!!
 The pre and post save middlewares are only executed if we create a new document using .create / .save and not insertMany.
+
+# Authentication vs Authorization
+
+Authentication verifies the user's identity, while authorization determines what resources that authenticated user is allowed to access.
+
+Eg:
+Login → JWT generated → User authenticated
+↓
+Access /admin API → Check role === "admin" → Authorized or Forbidden
+
+HTTP status codes
+
+401 Unauthorized → Actually means not authenticated (login required)
+
+403 Forbidden → Authenticated, but no permission
+
+# Encryption vs hash
+
+Encryption converts readable data into an unreadable format using a key, while hashing transforms data into a fixed, one-way value that cannot be reversed. Encryption is reversible while hashing is not reversible.
+
+## Encryption Eg:
+
+Original: MyBank123
+
+Encrypt
+↓
+a8F#2KxP...
+
+Decrypt with key
+↓
+MyBank123
+
+## Hashing Eg:
+
+Password: admin123
+
+Hash
+↓
+8c6976e5b541...
+
+Login:
+User enters admin123
+↓
+Hash again
+↓
+Compare hashes ✔
