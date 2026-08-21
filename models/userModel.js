@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema(
   {
@@ -61,6 +62,21 @@ userSchema.pre('save', async function () {
   }
   this.passwordConfirm = undefined; // This attribute will not be saved in the database
 });
+
+// Instance method -> This method will be accesible to all the user documents
+userSchema.methods.verifyPassword = function (plainPassword) {
+  return bcrypt.compare(plainPassword, this.password);
+};
+
+// Instance method to generate access token
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: 15 * 60 * 1000 });
+};
+
+// Instance method to generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: 7 * 24 * 60 * 60 * 1000 });
+};
 
 const User = mongoose.model('User', userSchema);
 
