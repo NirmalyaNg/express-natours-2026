@@ -369,3 +369,5 @@ User enters admin123
 Hash again
 ↓
 Compare hashes ✔
+
+// Why reset token is required in password reset flow?
