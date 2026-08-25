@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -50,6 +51,8 @@ const userSchema = new mongoose.Schema(
         message: "Roles can be: 'user', 'guide', 'lead-guide', 'admin'",
       },
     },
+    passwordResetToken: String,
+    passwordResetTokenExpiresAt: Date,
   },
   { timestamps: true },
 );
@@ -70,12 +73,36 @@ userSchema.methods.verifyPassword = function (plainPassword) {
 
 // Instance method to generate access token
 userSchema.methods.generateAccessToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: 15 * 60 * 1000 });
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: 15 * 60 * 1000,
+  });
 };
 
 // Instance method to generate refresh token
 userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: 7 * 24 * 60 * 60 * 1000 });
+  return jwt.sign({ _id: this._id }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
+// Generate password reset token, hash it and save it in the document
+userSchema.methods.generateAndSavePasswordResetToken = function () {
+  const passwordResetToken = crypto.randomBytes(32).toString('hex');
+  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+
+  this.passwordResetToken = hashedPasswordResetToken;
+  this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
+  return passwordResetToken;
+};
+
+// Generate password reset token, hash it and save it in the document
+userSchema.methods.generateAndSavePasswordResetToken = function () {
+  const passwordResetToken = crypto.randomBytes(32).toString('hex');
+  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+
+  this.passwordResetToken = hashedPasswordResetToken;
+  this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
+  return passwordResetToken;
 };
 
 const User = mongoose.model('User', userSchema);
