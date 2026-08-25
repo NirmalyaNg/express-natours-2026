@@ -370,4 +370,42 @@ Hash again
 ↓
 Compare hashes ✔
 
-// Why reset token is required in password reset flow?
+## Forgot Password and Reset Password Flow
+
+POST
+/forgot-password (Step 1)
+User sends email as request body to the server
+Server checks if there is an user with matching email
+If user is not found -> 404
+If user is found
+Server needs to generate a reset url and send it via email:
+
+           local      -> http://localhost:8000/api/v1/auth/reset-password/andbwihbfejhrfbejhrfj
+           production -> https://example.com/api/v1/auth/reset-password/hjwvcwjhfbjwhefbjhfbjdc
+
+           Server needs to generate a password reset token for the url
+           Server needs to hash the password reset token
+           Server needs to configure the expiry of the password reset token
+
+           Server needs to store the hashed password reset token in the database for that user
+       Server needs to store the password reset token's expiry date as well in the database for that user
+
+       Send the reset password url(containing the token) to the user's email
+
+PATCH
+/reset-password/:token (Step 2)
+
+User will send the reset token(url), new password(req body) and confirm new password (req body)
+
+Server needs to hash the password reset token before querying the database to find a matching user
+
+Server needs to figure out whose password it needs to change ?? Yes (server will check each user document and try to find a matching
+user containing the same reset token)
+
+How will the server figure out if the reset token is still valid? Yes (server will check the user's password reset token expiry date and
+compare it with the current date to figure out if the token is valid or has expired)
+
+If matching user is found with valid reset token, then server will update the password with the new password and confirm password
+with the new confirm password.
+
+Delete the reset token and reset token expiry from the database for that user and save the user in db

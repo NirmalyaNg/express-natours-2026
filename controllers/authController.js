@@ -92,7 +92,7 @@ exports.forgotPassword = async (req, res, next) => {
     await sendEmail({
       email,
       subject: 'Your Password Reset Token (Valid for 10 minutes)',
-      text: `Please send a PATCH request to the URL: ${resetPasswordLink} along with your new password and confirm password`,
+      text: `Please send a PATCH request to the URL: ${resetPasswordLink} along with your new password and confirm password. If you have not requested for a password reset, please ignore this email.`,
     });
     res.status(200).json({
       status: 'sucess',
@@ -108,4 +108,38 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-exports.resetPassword = () => {};
+exports.resetPassword = async (req, res, next) => {
+  const passwordResetToken = req.params.token;
+  const { newPassword, newPasswordConfirm } = req.body || {};
+
+  // Check if password reset token or new Password or new password confirm is missing
+  if (!passwordResetToken || !newPassword || !newPasswordConfirm) {
+    return next(new AppError('Password reset token and/or new password and/or confirm new password is missing', 400));
+  }
+
+  // Hash the password reset token received in the url
+  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+  // Find a matching user in the database whose reset token matches with the reset token received in the url and which is not expired yet
+  const existingUser = await User.findOne({
+    passwordResetToken: hashedPasswordResetToken,
+    passwordResetTokenExpiresAt: {
+      $gt: Date.now(),
+    },
+  });
+  if (!existingUser) {
+    return next(new AppError('Reset token is invalid or has expired', 400));
+  }
+  existingUser.password = newPassword;
+  existingUser.passwordConfirm = newPasswordConfirm;
+  existingUser.passwordResetToken = undefined;
+  existingUser.passwordResetTokenExpiresAt = undefined;
+  await existingUser.save();
+
+  const accessToken = existingUser.generateAccessToken();
+  res.status(200).json({
+    status: 'success',
+    data: {
+      accessToken,
+    },
+  });
+};
