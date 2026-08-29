@@ -73,35 +73,37 @@ exports.refresh = async (req, res, next) => {
 };
 
 exports.forgotPassword = async (req, res, next) => {
-  const { email } = req.body || {};
-  // Check if email is provided
+  // Check if user has provided an email as part of request body
+  const { email } = req.body;
   if (!email) return next(new AppError('Email is required', 400));
-
-  // Check if the user exists with matching email
+  // Check if there is a matching user in the database
   const existingUser = await User.findOne({ email });
   if (!existingUser) return next(new AppError('User does not exist', 404));
 
-  // Generate password reset token and save user document
-  const passwordResetToken = existingUser.generatePasswordResetToken();
-  await existingUser.save({ validateBeforeSave: false });
+  // Generate password reset token
+  const passwordResetToken = existingUser.generateAndSavePasswordResetToken();
+  await existingUser.save({ validateBeforeSave: false }); // Without validateBeforeSave mongoose will trigger validation and since the document doesn't have passwordConfirm, mongoose will throw Validation Error
 
   // Generate reset password link that will be send in the email body
   // http://localhost:9000/api/v1/auth/reset-password/:passwordResetToken
-  const passwordResetLink = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${passwordResetToken}`;
+  const resetPasswordLink = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${passwordResetToken}`;
+
   try {
     await sendEmail({
       email,
-      subject: 'Your password reset link (Valid for 10 minutes)',
-      text: `Forgot your password? Submit a PATCH request to ${passwordResetLink} with your new password and confirm password. If you have not requested for a password reset, please ignore this email.`,
+      subject: 'Your Password Reset Token (Valid for 10 minutes)',
+      text: `Please send a PATCH request to the URL: ${resetPasswordLink} along with your new password and confirm password. If you have not requested for a password reset, please ignore this email.`,
     });
     res.status(200).json({
-      status: 'success',
-      message: 'Email sent successfully',
+      status: 'sucess',
+      data: {
+        message: 'Email was sent successfully. Please check you mailbox',
+      },
     });
   } catch (error) {
     existingUser.passwordResetToken = undefined;
     existingUser.passwordResetTokenExpiresAt = undefined;
-    await existingUser.save({ validateBeforeSave: false });
+    await existingUser.save({ validateBeforeSave: false }); // Without validateBeforeSave mongoose will trigger validation and since the document doesn't have passwordConfirm, mongoose will throw Validation Error
     next(new AppError('Failed to send email. Please try again.', 500));
   }
 };
@@ -109,60 +111,35 @@ exports.forgotPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   const passwordResetToken = req.params.token;
   const { newPassword, newPasswordConfirm } = req.body || {};
-  // Check if password reset token, new password and confirm new passwords are provided
+
+  // Check if password reset token or new Password or new password confirm is missing
   if (!passwordResetToken || !newPassword || !newPasswordConfirm) {
-    return next(new AppError('Please provide password reset token, new password and confirm new password', 400));
+    return next(new AppError('Password reset token and/or new password and/or confirm new password is missing', 400));
   }
 
-  // Check if there is any user in the database with matching password reset token that hasn't expired yet
+  // Hash the password reset token received in the url
   const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+  // Find a matching user in the database whose reset token matches with the reset token received in the url and which is not expired yet
   const existingUser = await User.findOne({
     passwordResetToken: hashedPasswordResetToken,
-    passwordResetTokenExpiresAt: { $gt: Date.now() },
-  });
-  if (!existingUser) return next(new AppError('Password reset token is invalid or has expired', 400));
-
-  // Update fields
-  existingUser.passwordResetToken = undefined;
-  existingUser.passwordResetTokenExpiresAt = undefined;
-  existingUser.password = newPassword;
-  existingUser.passwordConfirm = newPasswordConfirm;
-  // Save updated document
-  await existingUser.save();
-  // Generate new access token because old one will no longer be valid as user has changed password
-  const newAccessToken = existingUser.generateAccessToken();
-  res.status(200).json({
-    status: 'success',
-    data: {
-      accessToken: newAccessToken,
+    passwordResetTokenExpiresAt: {
+      $gt: Date.now(),
     },
   });
-};
-
-exports.changePassword = async (req, res, next) => {
-  const { currentPassword, newPassword, newPasswordConfirm } = req.body || {};
-  // Check if current password, new password and new password confirm is present
-  if (!currentPassword || !newPassword || !newPasswordConfirm) {
-    return next(new AppError('Current Password, new password and confirm password are required', 400));
+  if (!existingUser) {
+    return next(new AppError('Reset token is invalid or has expired', 400));
   }
+  existingUser.password = newPassword;
+  existingUser.passwordConfirm = newPasswordConfirm;
+  existingUser.passwordResetToken = undefined;
+  existingUser.passwordResetTokenExpiresAt = undefined;
+  await existingUser.save();
 
-  // Check if current password matches with logged in user's password
-  const passwordsMatch = await req.user.verifyPassword(currentPassword);
-  if (!passwordsMatch) {
-    return next(new AppError('Current password is incorrect', 400));
-  }
-
-  // Update the password for the user document and save it
-  req.user.password = newPassword;
-  req.user.passwordConfirm = newPasswordConfirm;
-  await req.user.save();
-
-  // Generate new access token
-  const newAccessToken = req.user.generateAccessToken();
+  const accessToken = existingUser.generateAccessToken();
   res.status(200).json({
     status: 'success',
     data: {
-      accessToken: newAccessToken,
+      accessToken,
     },
   });
 };

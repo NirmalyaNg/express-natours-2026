@@ -53,7 +53,6 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetToken: String,
     passwordResetTokenExpiresAt: Date,
-    passwordChangedAt: Date,
   },
   { timestamps: true },
 );
@@ -65,13 +64,6 @@ userSchema.pre('save', async function () {
     this.password = await bcrypt.hash(this.password, 10);
   }
   this.passwordConfirm = undefined; // This attribute will not be saved in the database
-});
-
-// Update passwordChangedAt field if password has been modifed and if the document is not being saved for the first time
-userSchema.pre('save', function () {
-  if (this.isModified('password') && !this.isNew) {
-    this.passwordChangedAt = Date.now() - 2000; // Subtract 2 secs buffer so that passwordChangedAt is later than token generated timestamp
-  }
 });
 
 // Instance method -> This method will be accesible to all the user documents
@@ -93,23 +85,24 @@ userSchema.methods.generateRefreshToken = function () {
   });
 };
 
-// Generate password reset token
-userSchema.methods.generatePasswordResetToken = function () {
+// Generate password reset token, hash it and save it in the document
+userSchema.methods.generateAndSavePasswordResetToken = function () {
   const passwordResetToken = crypto.randomBytes(32).toString('hex');
   const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+
   this.passwordResetToken = hashedPasswordResetToken;
-  this.passwordResetTokenExpiresAt = Date.now() + 10 * 60 * 1000;
+  this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
   return passwordResetToken;
 };
 
-// Check if password was changed after token generation
-userSchema.methods.passwordChangedAfter = function (iatMs) {
-  if (this.passwordChangedAt) {
-    const passwordChangedAtMs = this.passwordChangedAt.getTime();
-    console.log('passwordChangedAtMs > iatMs', passwordChangedAtMs > iatMs);
-    return passwordChangedAtMs > iatMs;
-  }
-  return false;
+// Generate password reset token, hash it and save it in the document
+userSchema.methods.generateAndSavePasswordResetToken = function () {
+  const passwordResetToken = crypto.randomBytes(32).toString('hex');
+  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+
+  this.passwordResetToken = hashedPasswordResetToken;
+  this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
+  return passwordResetToken;
 };
 
 const User = mongoose.model('User', userSchema);
