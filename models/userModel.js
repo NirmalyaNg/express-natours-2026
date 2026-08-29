@@ -82,14 +82,14 @@ userSchema.methods.verifyPassword = function (plainPassword) {
 // Instance method to generate access token
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: 15 * 60 * 1000,
+    expiresIn: 15 * 60, // 15 minutes in seconds
   });
 };
 
 // Instance method to generate refresh token
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign({ _id: this._id }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: 7 * 24 * 60 * 60 * 1000,
+    expiresIn: 7 * 24 * 60 * 60, // 7 days in seconds
   });
 };
 
