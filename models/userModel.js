@@ -103,16 +103,6 @@ userSchema.methods.generateAndSavePasswordResetToken = function () {
   return passwordResetToken;
 };
 
-// Generate password reset token, hash it and save it in the document
-userSchema.methods.generateAndSavePasswordResetToken = function () {
-  const passwordResetToken = crypto.randomBytes(32).toString('hex');
-  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
-
-  this.passwordResetToken = hashedPasswordResetToken;
-  this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
-  return passwordResetToken;
-};
-
 // Check if user has changed password after the token was geenrated
 userSchema.methods.passwordChangedAfter = function (tokenIssuedAtMs) {
   if (this.passwordChangedAt) {
