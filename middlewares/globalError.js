@@ -24,9 +24,18 @@ const handleValidationError = (error) => {
 };
 
 // Handle Duplicate key error
-const handleDuplicateKeyError = (error, res) => {
+const handleDuplicateKeyError = (error) => {
   const [key, value] = Object.entries(error.keyValue)[0];
   return new AppError(`Duplicate value '${value}' for key '${key}'`, 400);
+};
+
+// Handle Token Expired Error
+const handleTokenExpiredError = (error) => {
+  return new AppError('Token has expired. Please login again.', 401);
+};
+
+const handleJsonWebTokenError = (error) => {
+  return new AppError('Invalid token. Please login again.', 401);
 };
 
 const sendErrorDev = (error, res) => {
@@ -75,6 +84,12 @@ module.exports = (error, req, res, next) => {
     }
     if (error.name === 'ValidationError') {
       customError = handleValidationError(error);
+    }
+    if (error.name === 'TokenExpiredError') {
+      customError = handleTokenExpiredError(error);
+    }
+    if (error.name === 'JsonWebTokenError') {
+      customError = handleJsonWebTokenError(error);
     }
     if (error.code === 11000) {
       customError = handleDuplicateKeyError(error);

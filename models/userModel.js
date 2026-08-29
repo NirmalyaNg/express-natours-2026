@@ -53,6 +53,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetToken: String,
     passwordResetTokenExpiresAt: Date,
+    passwordChangedAt: Date,
   },
   { timestamps: true },
 );
@@ -64,6 +65,13 @@ userSchema.pre('save', async function () {
     this.password = await bcrypt.hash(this.password, 10);
   }
   this.passwordConfirm = undefined; // This attribute will not be saved in the database
+});
+
+userSchema.pre('save', function () {
+  // This will make sure that the code below runs only when password has been modifed and the document is not being saved to the db for the first time
+  if (this.isModified('password') && !this.isNew) {
+    this.passwordChangedAt = Date.now() - 2000; // To ensure password has changed before token got generated
+  }
 });
 
 // Instance method -> This method will be accesible to all the user documents
@@ -103,6 +111,17 @@ userSchema.methods.generateAndSavePasswordResetToken = function () {
   this.passwordResetToken = hashedPasswordResetToken;
   this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
   return passwordResetToken;
+};
+
+// Check if user has changed password after the token was geenrated
+userSchema.methods.passwordChangedAfter = function (tokenIssuedAtMs) {
+  if (this.passwordChangedAt) {
+    const passwordChangedAtMs = this.passwordChangedAt.getTime();
+    if (passwordChangedAtMs > tokenIssuedAtMs) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);

@@ -143,3 +143,30 @@ exports.resetPassword = async (req, res, next) => {
     },
   });
 };
+
+exports.updateMyPassword = async (req, res, next) => {
+  const { currentPassword, newPassword, newPasswordConfirm } = req.body || {};
+  // Check if user has provided current password, new password and new password confirm
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return next(new AppError('Please provide current password, new password and confirm new password', 400));
+  }
+
+  // Check if the current password is correct
+  const isPasswordMatch = await req.user.verifyPassword(currentPassword);
+  if (!isPasswordMatch) {
+    return next(new AppError('Your current password is not correct. Please provide correct password.', 401));
+  }
+  // Update the document with new password and new password confirm, then save it to the database
+  req.user.password = newPassword;
+  req.user.passwordConfirm = newPasswordConfirm;
+  await req.user.save();
+
+  // Generate new access token as old one will no longer be valid since user changed password
+  const newAccessToken = req.user.generateAccessToken();
+  res.status(200).json({
+    status: 'success',
+    data: {
+      accessToken: newAccessToken,
+    },
+  });
+};
