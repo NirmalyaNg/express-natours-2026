@@ -86,7 +86,7 @@ exports.forgotPassword = async (req, res, next) => {
 
   // Generate reset password link that will be send in the email body
   // http://localhost:9000/api/v1/auth/reset-password/:passwordResetToken
-  const resetPasswordLink = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${passwordResetToken}`;
+  const resetPasswordLink = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${passwordResetToken}`;
 
   try {
     await sendEmail({
