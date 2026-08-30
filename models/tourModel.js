@@ -85,8 +85,38 @@ const tourSchema = new mongoose.Schema(
         },
       },
     },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
-  { toJSON: { virtuals: true }, toObject: { virtuals: true } }, // To enable virtuals
+  { toJSON: { virtuals: true }, toObject: { virtuals: true }, id: false }, // To enable virtuals
 );
 
 // Virtual is used to create a property which doesn't need to be stored in the db and whose value can be derived from
@@ -115,6 +145,11 @@ tourSchema.pre(/^find/, function () {
       $ne: true,
     },
   });
+});
+
+// Populate guides for queries starting with find
+tourSchema.pre(/^find/, function () {
+  this.populate('guides');
 });
 
 // Aggregation middleware

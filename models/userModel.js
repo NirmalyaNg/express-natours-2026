@@ -55,7 +55,17 @@ const userSchema = new mongoose.Schema(
     passwordResetTokenExpiresAt: Date,
     passwordChangedAt: Date,
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.passwordChangedAt;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
 );
 
 // Hash plain text password
