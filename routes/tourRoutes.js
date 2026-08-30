@@ -2,8 +2,11 @@ const { Router } = require('express');
 const tourController = require('../controllers/tourController');
 const protect = require('../middlewares/protect');
 const authorize = require('../middlewares/authorize');
+const reviewRouter = require('../routes/reviewRoutes');
 
 const router = Router();
+
+router.use('/:tourId/reviews', reviewRouter);
 
 router
   .route('/')

@@ -3,7 +3,9 @@ const reviewController = require('../controllers/reviewController');
 const protect = require('../middlewares/protect');
 const authorize = require('../middlewares/authorize');
 
-const router = express.Router();
+const router = express.Router({
+  mergeParams: true,
+});
 
 router.route('/').get(reviewController.getAllReviews).post(protect, authorize('user'), reviewController.createReview);
 
