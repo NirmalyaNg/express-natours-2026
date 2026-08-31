@@ -85,9 +85,54 @@ const tourSchema = new mongoose.Schema(
         },
       },
     },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
-  { toJSON: { virtuals: true }, toObject: { virtuals: true } }, // To enable virtuals
+  { toJSON: { virtuals: true }, toObject: { virtuals: true }, id: false }, // To enable virtuals
 );
+
+// Create a virtual property reviews
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'tour',
+});
+
+// Populate tour guides
+tourSchema.pre(/^find/, function () {
+  this.populate({
+    path: 'guides',
+    select: 'username role email',
+  });
+});
 
 // Virtual is used to create a property which doesn't need to be stored in the db and whose value can be derived from
 // the value of other attribute

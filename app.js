@@ -1,10 +1,11 @@
 const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const globalErrorMiddleware = require('./controllers/errorController');
+const AppError = require('./utils/appError');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
-const globalErrorMiddleware = require('./middlewares/globalError');
-const AppError = require('./utils/appError');
+const reviewRouter = require('./routes/reviewRouter');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 // Routers
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // Catch all unhandled routes
 app.all('/*splat', (req, res, next) => {

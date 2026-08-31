@@ -4,6 +4,38 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // We need to check if the logged-in users role matches with any of the roles
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('Action not allowed', 403));
+    }
+    next();
+  };
+};
+
+exports.protect = async (req, res, next) => {
+  let authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(new AppError('Not logged in', 401));
+  }
+  const token = authHeader.split(' ')[1];
+  // If the token is valid, then jwt.verify will return the payload that was encoded while token creation
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  // We are querying the db to check if the user still exists
+  const existingUser = await User.findById(decoded._id);
+  if (!existingUser) {
+    return next(new AppError('User no longer exists', 401));
+  }
+  // Check if the user changed password after token was created
+  const hasPasswordChanged = existingUser.passwordChangedAfter(decoded.iat * 1000);
+  if (hasPasswordChanged) {
+    return next(new AppError('User has changed password recently. Please login again.', 401));
+  }
+  req.user = existingUser;
+  next();
+};
+
 exports.signup = async (req, res, next) => {
   const { username, email, password, passwordConfirm } = req.body;
   const user = await User.create({
