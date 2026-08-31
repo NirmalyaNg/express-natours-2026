@@ -51,12 +51,49 @@ const userSchema = new mongoose.Schema(
         message: "Roles can be: 'user', 'guide', 'lead-guide', 'admin'",
       },
     },
+    active: {
+      type: Boolean,
+      default: true,
+    },
     passwordResetToken: String,
     passwordResetTokenExpiresAt: Date,
     passwordChangedAt: Date,
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    // This transform will be invoked whenever we try to send a user document as json as part of response
+    toJSON: {
+      transform: function (_, ret) {
+        delete ret.password;
+        delete ret.passwordChangedAt;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetTokenExpiresAt;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
 );
+
+// We do not consider users whose active != false
+userSchema.pre(/^find/, function () {
+  this.find({
+    active: {
+      $ne: false,
+    },
+  });
+});
+
+// We do not consider users whose active != false even for aggregations
+userSchema.pre('aggregate', function () {
+  this.pipeline().unshift({
+    $match: {
+      active: {
+        $ne: false,
+      },
+    },
+  });
+});
 
 // Hash plain text password
 userSchema.pre('save', async function () {
