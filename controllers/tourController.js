@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const Tour = require('../models/tourModel');
 const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
+const { deleteOne, createOne, updateOne, getOne, getAll } = require('./handlerFactory');
 
 exports.aliasTop5Cheap = (req, res, next) => {
   // Since in express 5, req.query object is readonly so we cannot modify it
@@ -17,26 +18,6 @@ exports.aliasTop5Cheap = (req, res, next) => {
     configurable: true,
   });
   next();
-};
-
-exports.getAllTours = async (req, res) => {
-  const features = new ApiFeatures(Tour.find(), req.query);
-  // features.filter();
-  // features.sort();
-  // features.limitFields();
-  // features.paginate();
-
-  features.filter().sort().limitFields().paginate(); // This chaining is possible only if each of the four methods return the instance of the object (this)
-
-  const tours = await features.dbQuery; // Here the query is sent to db
-
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
 };
 
 exports.getTourStats = async (req, res) => {
@@ -141,46 +122,13 @@ exports.getMonthlyTourPlan = async (req, res, next) => {
   });
 };
 
-exports.getTour = async (req, res, next) => {
-  const tourId = req.params.id;
-  const tour = await Tour.findById(tourId).populate({ path: 'reviews', select: '-tour' });
-  if (!tour) {
-    return next(new AppError(`Tour with id ${tourId} not found!`, 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-};
-
-exports.createTour = async (req, res) => {
-  // const tour = new Tour(req.body);
-  // await tour.save();
-  const tour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-};
-
-exports.updateTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-  });
-};
-
-exports.deleteTour = async (req, res) => {
-  const tourId = req.params.id;
-  const tour = await Tour.findByIdAndDelete(tourId);
-  if (!tour) {
-    return next(new AppError(`Tour with id ${tourId} not found!`, 404));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-};
+// Get all tours
+exports.getAllTours = getAll(Tour);
+// Get a tour
+exports.getTour = getOne(Tour, { path: 'reviews', select: '-tour' });
+// Create a tour
+exports.createTour = createOne(Tour);
+// Update a tour
+exports.updateTour = updateOne(Tour);
+// Delete a tour
+exports.deleteTour = deleteOne(Tour);
