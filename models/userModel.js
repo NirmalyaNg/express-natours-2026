@@ -51,12 +51,37 @@ const userSchema = new mongoose.Schema(
         message: "Roles can be: 'user', 'guide', 'lead-guide', 'admin'",
       },
     },
+    active: {
+      type: Boolean,
+      default: true,
+    },
     passwordResetToken: String,
     passwordResetTokenExpiresAt: Date,
     passwordChangedAt: Date,
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.passwordChangedAt;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetTokenExpiresAt;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
 );
+
+// Only query for active users
+userSchema.pre(/^find/, function () {
+  this.find({
+    active: {
+      $ne: false,
+    },
+  });
+});
 
 // Hash plain text password
 userSchema.pre('save', async function () {

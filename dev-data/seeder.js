@@ -1,40 +1,34 @@
-const connectDB = require('../config/db');
+require('../config/db');
+
 const Tour = require('../models/tourModel');
-const tours = require('./data/tours-simple.json');
+const User = require('../models/userModel');
 
-// Upload Tours
-async function uploadTours() {
-  try {
-    await Tour.create(tours);
-    console.log('Tours created successfully');
-  } catch (error) {
-    console.log('Failed to upload tours data. Error: ', error);
-  }
-  process.exit(1);
-}
+const tours = require('../dev-data/data/tours.json');
+``;
 
-// Delete Tours
-async function deleteTours() {
+async function deleteData() {
   try {
     await Tour.deleteMany();
-    console.log('Tours deleted successfully');
+    await User.deleteMany();
+    console.log('Data deleted successfully');
   } catch (error) {
-    console.log('Failed to delete tours data. Error: ', error);
+    console.log('Error deleting data:', error);
   }
-  process.exit(1);
+  process.exit();
 }
 
-const operation = process.argv[2];
+async function importData() {
+  try {
+    await Tour.create(tours);
+    console.log('Data inserted successfully');
+  } catch (error) {
+    console.log('Error inserting data:', error);
+  }
+  process.exit();
+}
 
-connectDB()
-  .then(() => {
-    if (operation === '--upload') {
-      uploadTours();
-    } else if (operation === '--delete') {
-      deleteTours();
-    }
-  })
-  .catch((error) => {
-    console.log('Error connecting to database. Error: ', error);
-    process.exit(1);
-  });
+if (process.argv[2] === '--delete') {
+  deleteData();
+} else if (process.argv[2] === '--import') {
+  importData();
+}
