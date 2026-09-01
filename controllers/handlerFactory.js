@@ -67,7 +67,7 @@ exports.getAll = (Model) => async (req, res) => {
 
   features.filter().sort().limitFields().paginate(); // This chaining is possible only if each of the four methods return the instance of the object (this)
 
-  const docs = await features.dbQuery; // Here the query is sent to db
+  const docs = await features.dbQuery.explain(); // Here the query is sent to db
 
   res.status(200).json({
     status: 'success',

@@ -119,6 +119,10 @@ const tourSchema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true }, id: false }, // To enable virtuals
 );
 
+// Indexes
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+
 // Create a virtual property reviews
 tourSchema.virtual('reviews', {
   ref: 'Review',

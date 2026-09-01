@@ -1,6 +1,4 @@
-const fs = require('node:fs');
 const Tour = require('../models/tourModel');
-const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const { deleteOne, createOne, updateOne, getOne, getAll } = require('./handlerFactory');
 
