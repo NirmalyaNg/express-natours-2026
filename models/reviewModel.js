@@ -60,9 +60,9 @@ reviewSchema.statics.updateTourReviewStats = async function (tourId) {
 };
 
 // Update the ratingsAverage and ratingsQuantity on a tour when its review is created/updated/deleted
-reviewSchema.post('save', function (doc) {
+reviewSchema.post('save', async function (doc) {
   const tourId = doc.tour;
-  doc.model().updateTourReviewStats(tourId);
+  await doc.model().updateTourReviewStats(tourId);
 });
 
 reviewSchema.pre(/^findOneAnd/, async function () {
@@ -71,7 +71,7 @@ reviewSchema.pre(/^findOneAnd/, async function () {
 });
 
 reviewSchema.post(/^findOneAnd/, async function () {
-  this.model.updateTourReviewStats(this.r.tour._id);
+  await this.model.updateTourReviewStats(this.r.tour._id);
 });
 
 // Populate user and tour for review
