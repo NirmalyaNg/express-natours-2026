@@ -143,10 +143,7 @@ exports.getMonthlyTourPlan = async (req, res, next) => {
 
 exports.getTour = async (req, res, next) => {
   const tourId = req.params.id;
-  const tour = await Tour.findById(tourId).populate({
-    path: 'reviews',
-    select: '-tour',
-  });
+  const tour = await Tour.findById(tourId);
   if (!tour) {
     return next(new AppError(`Tour with id ${tourId} not found!`, 404));
   }
