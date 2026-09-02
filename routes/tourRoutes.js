@@ -7,7 +7,7 @@ const router = Router();
 
 router
   .route('/')
-  .get(protect, tourController.getAllTours)
+  .get(tourController.getAllTours)
   .post(protect, authorize('lead-guide', 'admin'), tourController.createTour);
 
 router.get('/top-5-cheap', tourController.aliasTop5Cheap, tourController.getAllTours);
