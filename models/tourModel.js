@@ -122,6 +122,7 @@ const tourSchema = new mongoose.Schema(
 // Indexes
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' }); // for geospatial queries
 
 // Create a virtual property reviews
 tourSchema.virtual('reviews', {
@@ -168,15 +169,15 @@ tourSchema.pre(/^find/, function () {
 
 // Aggregation middleware
 // Pre-aggregate middleware -> This middleware function gets executed right before the aggregation pipeline is executed
-tourSchema.pre('aggregate', function () {
-  this.pipeline().unshift({
-    $match: {
-      secret: {
-        $ne: true,
-      },
-    },
-  });
-});
+// tourSchema.pre('aggregate', function () {
+//   this.pipeline().unshift({
+//     $match: {
+//       secret: {
+//         $ne: true,
+//       },
+//     },
+//   });
+// });
 
 const Tour = mongoose.model('Tour', tourSchema);
 
