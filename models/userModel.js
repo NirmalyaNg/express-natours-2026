@@ -1,21 +1,21 @@
-const crypto = require('node:crypto');
-const mongoose = require('mongoose');
-const validator = require('validator');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const crypto = require("node:crypto");
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    name: {
       type: String,
-      required: [true, 'Username is required'],
-      minlength: [3, 'Username must have atleast 3 characters'],
+      required: [true, "Username is required"],
+      minlength: [3, "Username must have atleast 3 characters"],
       trim: true,
       unique: true,
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       trim: true,
       lowercase: true,
       unique: true,
@@ -24,30 +24,30 @@ const userSchema = new mongoose.Schema(
         //   return validator.isEmail(value);
         // },
         validator: validator.isEmail,
-        message: 'Email is invalid',
+        message: "Email is invalid",
       },
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: [true, "Password is required"],
       trim: true,
-      minlength: [6, 'Password must have atleast 6 characters'],
+      minlength: [6, "Password must have atleast 6 characters"],
     },
     passwordConfirm: {
       type: String,
-      required: [true, 'Password Confirm is required'],
+      required: [true, "Password Confirm is required"],
       validate: {
         validator: function (value) {
           return value === this.password;
         },
-        message: 'Passwords do no match',
+        message: "Passwords do no match",
       },
     },
     role: {
       type: String,
-      default: 'user',
+      default: "user",
       enum: {
-        values: ['user', 'guide', 'lead-guide', 'admin'],
+        values: ["user", "guide", "lead-guide", "admin"],
         message: "Roles can be: 'user', 'guide', 'lead-guide', 'admin'",
       },
     },
@@ -85,7 +85,7 @@ userSchema.pre(/^find/, function () {
 });
 
 // We do not consider users whose active != false even for aggregations
-userSchema.pre('aggregate', function () {
+userSchema.pre("aggregate", function () {
   this.pipeline().unshift({
     $match: {
       active: {
@@ -96,17 +96,17 @@ userSchema.pre('aggregate', function () {
 });
 
 // Hash plain text password
-userSchema.pre('save', async function () {
+userSchema.pre("save", async function () {
   // isModified('password') will return true at first during registration as well as later on when the password has changed
-  if (this.isModified('password')) {
+  if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   this.passwordConfirm = undefined; // This attribute will not be saved in the database
 });
 
-userSchema.pre('save', function () {
+userSchema.pre("save", function () {
   // This will make sure that the code below runs only when password has been modifed and the document is not being saved to the db for the first time
-  if (this.isModified('password') && !this.isNew) {
+  if (this.isModified("password") && !this.isNew) {
     this.passwordChangedAt = Date.now() - 2000; // To ensure password has changed before token got generated
   }
 });
@@ -132,8 +132,11 @@ userSchema.methods.generateRefreshToken = function () {
 
 // Generate password reset token, hash it and save it in the document
 userSchema.methods.generateAndSavePasswordResetToken = function () {
-  const passwordResetToken = crypto.randomBytes(32).toString('hex');
-  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+  const passwordResetToken = crypto.randomBytes(32).toString("hex");
+  const hashedPasswordResetToken = crypto
+    .createHash("sha256")
+    .update(passwordResetToken)
+    .digest("hex");
 
   this.passwordResetToken = hashedPasswordResetToken;
   this.passwordResetTokenExpiresAt = new Date().getTime() + 10 * 60 * 1000; // 10 minutes after the token is generated
@@ -151,6 +154,6 @@ userSchema.methods.passwordChangedAfter = function (tokenIssuedAtMs) {
   return false;
 };
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
