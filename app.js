@@ -1,19 +1,20 @@
-const { rateLimit } = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const { xss } = require('express-xss-sanitizer');
-const hpp = require('hpp');
-const helmet = require('helmet');
-const express = require('express');
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
-const tourRouter = require('./routes/tourRoutes');
-const userRouter = require('./routes/userRoutes');
-const globalErrorMiddleware = require('./middlewares/globalError');
-const AppError = require('./utils/appError');
+const { rateLimit } = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
+const { xss } = require("express-xss-sanitizer");
+const hpp = require("hpp");
+const helmet = require("helmet");
+const express = require("express");
+const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
+const tourRouter = require("./routes/tourRoutes");
+const userRouter = require("./routes/userRoutes");
+const reviewRouter = require("./routes/reviewRoutes");
+const globalErrorMiddleware = require("./middlewares/globalError");
+const AppError = require("./utils/appError");
 const app = express();
 
 // Limit request body to 10 Kilobytes
-app.use(express.json({ limit: '10Kb' })); // Here express.json is not a middleware. The function which it returns is the middleware
+app.use(express.json({ limit: "10Kb" })); // Here express.json is not a middleware. The function which it returns is the middleware
 
 // Prevent cross site scripting attacks
 // Express 4.x and 5.x middleware which sanitizes user input data (in req.body, req.query, req.headers and req.params) to prevent Cross Site Scripting (XSS) attack.
@@ -26,14 +27,14 @@ app.use(
 app.use(
   hpp({
     whitelist: [
-      'name',
-      'duration',
-      'maxGroupSize',
-      'difficulty',
-      'ratingsAverage',
-      'ratingsQuantity',
-      'price',
-      'priceDiscount',
+      "name",
+      "duration",
+      "maxGroupSize",
+      "difficulty",
+      "ratingsAverage",
+      "ratingsQuantity",
+      "price",
+      "priceDiscount",
     ],
   }),
 );
@@ -53,7 +54,7 @@ app.use(
 const limiter = rateLimit({
   limit: 100, // Number of requests to allow
   windowMs: 10 * 60 * 1000, // Time frame
-  message: 'Too many requests. Please try again later.', // Once the ip is rate limited, it will receive this message from the server with 429 status code
+  message: "Too many requests. Please try again later.", // Once the ip is rate limited, it will receive this message from the server with 429 status code
 });
 app.use(limiter); // Apply the rate limiting middleware here to all requests
 
@@ -71,7 +72,7 @@ Example of nosql query injection -> This will fetch any user whose password is 1
 // This is needed since express 5 doesn't allow modification of req.query as it is read-only.
 // So we need to define below middleware so that express-mongo-sanitize can sanitize the req query.
 app.use((req, res, next) => {
-  Object.defineProperty(req, 'query', {
+  Object.defineProperty(req, "query", {
     value: { ...req.query },
     writable: true,
     configurable: true,
@@ -88,34 +89,35 @@ app.use(mongoSanitize());
 app.use(helmet());
 
 // To extend the behavior of express query parser
-app.set('query parser', 'extended');
+app.set("query parser", "extended");
 
 // To support incoming cookies
 app.use(cookieParser());
 
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
 }
 
 app.use(express.static(`${__dirname}/public`)); // To expose static assets inside public folder
 
 app.use((req, res, next) => {
-  console.log('Hello from logger Middleware!!');
+  console.log("Hello from logger Middleware!!");
   next();
 });
 
 app.use((req, res, next) => {
-  console.log('Hello from requestTime middleware!!');
+  console.log("Hello from requestTime middleware!!");
   req.requestTime = new Date().toISOString();
   next();
 });
 
 // Routers
-app.use('/api/v1/tours', tourRouter);
-app.use('/api/v1/users', userRouter);
+app.use("/api/v1/tours", tourRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 // Catch all unhandled routes
-app.all('/*splat', (req, res, next) => {
+app.all("/*splat", (req, res, next) => {
   // throw new Error(`Cannot find ${req.originalUrl} on the server`);
   // const error = new Error(`Cannot find ${req.originalUrl} on the server`);
   // error.statusCode = 404;

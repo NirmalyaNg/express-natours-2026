@@ -132,6 +132,7 @@ const tourSchema = new mongoose.Schema(
 );
 
 // To populate guides data
+// N + 1 query problem is eliminated if we use populate
 tourSchema.pre(/^find/, function () {
   this.populate({
     path: "guides",
