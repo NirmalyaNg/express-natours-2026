@@ -131,6 +131,24 @@ const tourSchema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }, // To enable virtuals
 );
 
+// Each review document has a tour field which stores the id of the tour with which it is associated
+// We are storing the tour id in order to have parent referencing where tour(parent) & review(child).
+// In this way, we can use populate on reviews but not on tours.
+// In order to solve this, and get the reviews data for each tour we need to use virtual populate.
+// Here we are creating a virtual property on tour schema called 'reviews'
+// In order to derive the value of the virtual property, we need to set a ref which points to the
+// Review model and specify the localField and foreignField.
+// Here the connection is between tour(_id) -> review(tour).
+// So with respect to tourSchema, localField is _id and foreignField is tour
+// We will use populate('reviews') only on getTour controller becuase we ideally need to only fetch the reviews for tour detail page.
+
+// Tour (_id) -> Review (tour)
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'tour'
+})
+
 // To populate guides data
 // N + 1 query problem is eliminated if we use populate
 tourSchema.pre(/^find/, function () {

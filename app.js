@@ -112,6 +112,7 @@ app.use((req, res, next) => {
 });
 
 // Routers
+// /api/v1/tours/wufh3ufiu3f/reviews
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);

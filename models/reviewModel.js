@@ -27,10 +27,11 @@ const reviewSchema = new mongoose.Schema({
 });
 
 reviewSchema.pre(/^find/, function () {
-  this.populate("user").populate({
-    path: "tour",
-    select: "name",
-  });
+  // this.populate("user").populate({
+  //   path: "tour",
+  //   select: "name",
+  // });
+  this.populate("user");
 });
 
 const Review = mongoose.model("Review", reviewSchema);
