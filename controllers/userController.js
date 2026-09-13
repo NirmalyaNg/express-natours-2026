@@ -1,7 +1,7 @@
-const path = require("node:path");
-const multer = require("multer");
 const User = require("../models/userModel");
 const AppError = require("../utils/appError");
+const multer = require('multer');
+const sharp = require('sharp');
 const {
   updateOne,
   deleteOne,
@@ -10,28 +10,6 @@ const {
   createOne,
 } = require("./handlerFactory");
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dest = path.join(__dirname, "../public/img/users");
-    cb(null, dest);
-  },
-  filename: (req, file, cb) => {
-    console.log(file);
-    const ext = file.mimetype.split("/")[1];
-    cb(null, `user-${req.user._id}-${Date.now()}.${ext}`);
-  },
-});
-
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new AppError("Only images can be uploaded", 400), false);
-  }
-};
-
-const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
-exports.uploadUserPhoto = upload.single("photo");
 
 function filterObj(obj, allowedAttrs) {
   const filteredObj = {};
@@ -41,6 +19,44 @@ function filterObj(obj, allowedAttrs) {
     }
   });
   return filteredObj;
+}
+
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user._id}-${Date.now()}.${ext}`);
+//   }
+// });
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if(!file.mimetype.startsWith('image')) {
+    cb(new AppError('File is not an image', 400), false);
+  } else {
+    cb(null, true);
+  }
+}
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = async (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user._id}-${Date.now()}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`); 
+
+  next();
 }
 
 exports.updateMe = async (req, res, next) => {
@@ -54,6 +70,8 @@ exports.updateMe = async (req, res, next) => {
     );
   }
   const filteredData = filterObj(req.body, ["name", "email"]);
+  if(req.file?.filename) filteredData['photo'] = req.file.filename;
+
   const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredData, {
     runValidators: true,
     returnDocument: "after",
