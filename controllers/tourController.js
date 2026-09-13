@@ -1,6 +1,54 @@
+const multer = require('multer');
+const sharp = require('sharp');
 const Tour = require('../models/tourModel');
 const AppError = require('../utils/appError');
 const { deleteOne, createOne, updateOne, getOne, getAll } = require('./handlerFactory');
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if(!file.mimetype.startsWith('image')) {
+    cb(new AppError('File is not an image', 400), false);
+  } else {
+    cb(null, true);
+  }
+}
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+
+exports.uploadTourImages = upload.fields([
+  {
+    name: 'imageCover', maxCount: 1,
+  },
+  {
+    name: 'images', maxCount: 3
+  }
+]);
+
+exports.resizeTourImages = async (req, res, next) => {
+  console.log(req.files)
+  if(!req.files.imageCover || !req.files.images) return next();
+
+  req.body.imageCover = `tour-${req.params.id}-cover.jpeg`;
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({quality: 90})
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  req.body.images = [];
+  const imageResizePromises = req.files.images.map((image, index) => {
+    req.body.images[index] = `tour-${req.params.id}-${index + 1}.jpeg`;
+    return sharp(image.buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({quality: 90})
+      .toFile(`public/img/tours/${req.body.images[index]}`)
+  });
+
+  await Promise.all(imageResizePromises);
+  next();
+}
 
 exports.aliasTop5Cheap = (req, res, next) => {
   // Since in express 5, req.query object is readonly so we cannot modify it

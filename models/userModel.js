@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
         message: "Roles can be: 'user', 'guide', 'lead-guide', 'admin'",
       },
     },
+    photo: {
+      type: String,
+      default: 'default.jpg'
+    },
     active: {
       type: Boolean,
       default: true,

@@ -16,7 +16,11 @@ router.use(authController.protect);
 router.patch("/updateMyPassword", authController.updateMyPassword);
 router
   .route("/me")
-  .patch(userController.uploadUserPhoto, userController.updateMe)
+  .patch(
+    userController.uploadUserPhoto, 
+    userController.resizeUserPhoto, 
+    userController.updateMe
+  )
   .delete(userController.deleteMe);
 
 // protected routes + authorization(admin)
