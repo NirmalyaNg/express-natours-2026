@@ -1,6 +1,6 @@
 const AppError = require('../utils/appError');
 const User = require('../models/userModel');
-const { getAll, deleteOne, updateOne } = require('./handlerFactory');
+const { getAll, deleteOne, updateOne, create, getOne } = require('./handlerFactory');
 
 // { name: 'hbwdhbwe', email: 'dvffff', role: 'sdfd' } -> obj
 // allowedAttributes = ['email', 'name']
@@ -16,28 +16,14 @@ function filterObj(obj, allowedAttributes) {
   return filteredObj;
 }
 
+exports.updateParams = (req, res, next) => {
+  req.params.id = req.user._id;
+  next();
+};
+
+exports.getUser = getOne(User);
 exports.getAllUsers = getAll(User);
-
-exports.getUser = async (req, res, next) => {
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    return next(new AppError(`User with id ${req.params.id} not found`, 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
-};
-
-exports.createUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    error: 'Method not implemented',
-  });
-};
-
+exports.createUser = create(User);
 exports.updateUser = updateOne(User);
 exports.deleteUser = deleteOne(User);
 

@@ -9,7 +9,7 @@ const router = express.Router({
 
 router
   .route('/')
-  .post(protect, authorize('user', 'admin'), reviewController.createReview)
+  .post(protect, authorize('user', 'admin'), reviewController.updateBody, reviewController.createReview)
   .get(reviewController.updateFilter, reviewController.getAllReviews);
 
 // http://localhost:8000/api/v1/tours/hadkjjb3j4bkj4bkj4k3/reviews

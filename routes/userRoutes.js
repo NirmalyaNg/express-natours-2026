@@ -7,7 +7,11 @@ const router = Router();
 
 router.route('/').get(userController.getAllUsers).post(userController.createUser);
 
-router.route('/me').patch(protect, userController.updateMe).delete(protect, userController.deleteMe);
+router
+  .route('/me')
+  .patch(protect, userController.updateMe)
+  .delete(protect, userController.deleteMe)
+  .get(protect, userController.updateParams, userController.getUser);
 // Only authenticated users will be able to update their password
 router.patch('/updateMyPassword', protect, authController.updateMyPassword);
 router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);

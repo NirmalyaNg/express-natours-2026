@@ -1,6 +1,6 @@
 const Tour = require('../models/tourModel');
 const AppError = require('../utils/appError');
-const { getAll, deleteOne, updateOne } = require('./handlerFactory');
+const { getAll, deleteOne, updateOne, getOne, create } = require('./handlerFactory');
 
 exports.aliasTop5Cheap = (req, res, next) => {
   // Since in express 5, req.query object is readonly so we cannot modify it
@@ -17,8 +17,6 @@ exports.aliasTop5Cheap = (req, res, next) => {
   });
   next();
 };
-
-exports.getAllTours = getAll(Tour);
 
 exports.getTourStats = async (req, res) => {
   const stats = await Tour.aggregate([
@@ -122,31 +120,8 @@ exports.getMonthlyTourPlan = async (req, res, next) => {
   });
 };
 
-exports.getTour = async (req, res, next) => {
-  const tourId = req.params.id;
-  const tour = await Tour.findById(tourId).populate('reviews');
-  if (!tour) {
-    return next(new AppError(`Tour with id ${tourId} not found!`, 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-};
-
-exports.createTour = async (req, res) => {
-  // const tour = new Tour(req.body);
-  // await tour.save();
-  const tour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-};
-
+exports.getAllTours = getAll(Tour);
+exports.getTour = getOne(Tour, [{ path: 'reviews' }]);
+exports.createTour = create(Tour);
 exports.updateTour = updateOne(Tour);
 exports.deleteTour = deleteOne(Tour);

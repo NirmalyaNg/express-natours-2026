@@ -1,10 +1,23 @@
 const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 
-// Get All
+exports.create = (Model) => {
+  return async (req, res) => {
+    // const tour = new Tour(req.body);
+    // await tour.save();
+    const doc = await Model.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: {
+        doc,
+      },
+    });
+  };
+};
+
 exports.getAll = (Model) => {
   return async (req, res) => {
-    const features = new ApiFeatures(Model.find(req.filter ?? {}), req.query);
+    const features = new ApiFeatures(Model.find(req.filterObj ?? {}), req.query);
     // features.filter();
     // features.sort();
     // features.limitFields();
@@ -53,6 +66,31 @@ exports.updateOne = (Model) => {
 
     await doc.save();
 
+    res.status(200).json({
+      status: 'success',
+      data: {
+        doc,
+      },
+    });
+  };
+};
+
+exports.getOne = (Model, populateOptions) => {
+  return async (req, res, next) => {
+    const docId = req.params.id;
+
+    let query = Model.findById(docId);
+
+    if (populateOptions?.length) {
+      populateOptions.forEach((option) => {
+        query = query.populate(option);
+      });
+    }
+
+    const doc = await query;
+    if (!doc) {
+      return next(new AppError(`Doc with id ${docId} not found!`, 404));
+    }
     res.status(200).json({
       status: 'success',
       data: {

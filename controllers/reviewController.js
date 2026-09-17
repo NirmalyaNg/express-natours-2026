@@ -1,5 +1,5 @@
 const Review = require('../models/reviewModel');
-const { deleteOne, updateOne, getAll } = require('./handlerFactory');
+const { deleteOne, updateOne, getAll, create, getOne } = require('./handlerFactory');
 
 // Creating a review:
 
@@ -25,32 +25,26 @@ const { deleteOne, updateOne, getAll } = require('./handlerFactory');
 // rating -> ?
 
 exports.updateFilter = (req, res, next) => {
-  req.filter = {};
+  req.filterObj = {};
   if (req.params.id) {
-    req.filter.tour = req.params.id;
+    req.filterObj.tour = req.params.id;
   }
   next();
 };
 
-exports.createReview = async (req, res, next) => {
-  const reviewData = {
-    ...req.body, // rating, review content
-  };
-
+exports.updateBody = (req, res, next) => {
   if (req.params.id) {
-    reviewData['tour'] = req.params.id; // tourid
+    req.body.tour = req.params.id;
   }
 
-  reviewData['user'] = req.user._id; // userid
-  const review = await Review.create(reviewData);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      review,
-    },
-  });
+  if (req.user._id) {
+    req.body.user = req.user._id;
+  }
+  next();
 };
 
+exports.getReview = getOne(Review);
+exports.createReview = create(Review);
 exports.getAllReviews = getAll(Review);
 exports.updateReview = updateOne(Review);
 exports.deleteRevew = deleteOne(Review);
