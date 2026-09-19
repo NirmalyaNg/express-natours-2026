@@ -47,4 +47,4 @@ exports.getReview = getOne(Review);
 exports.createReview = create(Review);
 exports.getAllReviews = getAll(Review);
 exports.updateReview = updateOne(Review);
-exports.deleteRevew = deleteOne(Review);
+exports.deleteReview = deleteOne(Review);

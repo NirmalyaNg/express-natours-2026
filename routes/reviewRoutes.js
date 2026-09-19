@@ -12,6 +12,12 @@ router
   .post(protect, authorize('user', 'admin'), reviewController.updateBody, reviewController.createReview)
   .get(reviewController.updateFilter, reviewController.getAllReviews);
 
+router
+  .route('/:id')
+  .get(reviewController.getReview)
+  .patch(protect, authorize('user', 'admin'), reviewController.updateReview)
+  .delete(protect, authorize('user', 'admin'), reviewController.deleteReview);
+
 // http://localhost:8000/api/v1/tours/hadkjjb3j4bkj4bkj4k3/reviews
 // tourid -> req.params
 // userid -> req.user

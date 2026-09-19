@@ -20,12 +20,17 @@ router.get('/top-5-cheap', tourController.aliasTop5Cheap, tourController.getAllT
 
 router.get('/tour-stats', tourController.getTourStats);
 
-router.get('/monthly-tour-plan/:year', tourController.getMonthlyTourPlan);
+router.get(
+  '/monthly-tour-plan/:year',
+  protect,
+  authorize('guide', 'lead-guide', 'admin'),
+  tourController.getMonthlyTourPlan,
+);
 
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(protect, tourController.updateTour)
-  .delete(protect, tourController.deleteTour);
+  .patch(protect, authorize('lead-guide', 'admin'), tourController.updateTour)
+  .delete(protect, authorize('lead-guide', 'admin'), tourController.deleteTour);
 
 module.exports = router;
