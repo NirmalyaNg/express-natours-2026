@@ -120,6 +120,75 @@ exports.getMonthlyTourPlan = async (req, res, next) => {
   });
 };
 
+// /api/v1/tours/tours-within/201/center/101.14785,-25.12354/unit/mi
+exports.getToursWithin = async (req, res, next) => {
+  const { distance, latlong, unit } = req.params;
+  if (!distance || !latlong) {
+    return next(
+      new AppError(
+        'Distance and latitude,longitude is mandatory. Please provide latitude and longitude in the format lat,long',
+        400,
+      ),
+    );
+  }
+
+  const radius = unit === 'mi' ? distance / 3963.1676 : distance / 6378.1;
+
+  const [latitude, longitude] = latlong.split(',');
+
+  // This is an example of geospatial query
+  const tours = await Tour.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [[+longitude, +latitude], radius],
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      tours,
+    },
+  });
+};
+
+exports.getTourDistances = async (req, res, next) => {
+  const { latlong, unit } = req.params;
+  if (!latlong) {
+    return next(new AppError('Please provide latitude and longitude in the format lat,long', 400));
+  }
+  const [latitude, longitude] = latlong.split(',');
+
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          // GeoJSON
+          type: 'Point',
+          coordinates: [+longitude, +latitude],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: unit === 'mi' ? 0.000621371 : 0.001,
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        distance: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      distances,
+    },
+  });
+};
+
 exports.getAllTours = getAll(Tour);
 exports.getTour = getOne(Tour, [{ path: 'reviews' }]);
 exports.createTour = create(Tour);

@@ -20,6 +20,10 @@ router.get('/top-5-cheap', tourController.aliasTop5Cheap, tourController.getAllT
 
 router.get('/tour-stats', tourController.getTourStats);
 
+router.get('/tours-within/:distance/center/:latlong/unit/:unit', tourController.getToursWithin);
+
+router.get('/distances/center/:latlong/unit/:unit', tourController.getTourDistances);
+
 router.get(
   '/monthly-tour-plan/:year',
   protect,

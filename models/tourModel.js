@@ -131,6 +131,7 @@ const tourSchema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }, // To enable virtuals
 );
 
+tourSchema.index({ startLocation: '2dsphere' }); // This is mandatory for performing geospatial queries on startLocation
 tourSchema.index({ slug: 1 });
 tourSchema.index({ price: 1, ratingsAverage: -1 }); // Compound index
 tourSchema.index({ ratingsAverage: -1 }); // Even if we have a compund index with pric + ratingsAverage, index scan
@@ -195,13 +196,23 @@ tourSchema.pre(/^find/, function () {
 // Aggregation middleware
 // Pre-aggregate middleware -> This middleware function gets executed right before the aggregation pipeline is executed
 tourSchema.pre('aggregate', function () {
-  this.pipeline().unshift({
-    $match: {
-      secret: {
-        $ne: true,
+  if ('$geoNear' in this.pipeline()?.[0]) {
+    this.pipeline().splice(1, 0, {
+      $match: {
+        secret: {
+          $ne: true,
+        },
       },
-    },
-  });
+    });
+  } else {
+    this.pipeline().unshift({
+      $match: {
+        secret: {
+          $ne: true,
+        },
+      },
+    });
+  }
 });
 
 const Tour = mongoose.model('Tour', tourSchema);

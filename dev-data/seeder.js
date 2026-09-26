@@ -1,8 +1,10 @@
-require("../config/db");
-const Tour = require("../models/tourModel");
-const User = require("../models/userModel");
-const tours = require("./data/tours.json");
-const users = require("./data/users.json");
+require('../config/db');
+const Tour = require('../models/tourModel');
+const User = require('../models/userModel');
+const Review = require('../models/reviewModel');
+const tours = require('./data/tours.json');
+const users = require('./data/users.json');
+const reviews = require('./data/reviews.json');
 
 // Upload Tours
 async function uploadData() {
@@ -11,9 +13,10 @@ async function uploadData() {
       validateBeforeSave: false,
     });
     await Tour.create(tours);
-    console.log("Data created successfully");
+    await Review.create(reviews);
+    console.log('Data created successfully');
   } catch (error) {
-    console.log("Failed to upload data. Error: ", error);
+    console.log('Failed to upload data. Error: ', error);
   }
   process.exit(1);
 }
@@ -23,17 +26,18 @@ async function deleteData() {
   try {
     await User.deleteMany();
     await Tour.deleteMany();
-    console.log("Data deleted successfully");
+    await Review.deleteMany();
+    console.log('Data deleted successfully');
   } catch (error) {
-    console.log("Failed to delete data. Error: ", error);
+    console.log('Failed to delete data. Error: ', error);
   }
   process.exit(1);
 }
 
 const operation = process.argv[2];
 
-if (operation === "--upload") {
+if (operation === '--upload') {
   uploadData();
-} else if (operation === "--delete") {
+} else if (operation === '--delete') {
   deleteData();
 }
