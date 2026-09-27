@@ -7,13 +7,12 @@ module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
     this.from = `Nirmalya Ganguly <${process.env.EMAIL_FROM}>`;
-    this.firstName = user.name.split(' ')[0];
     this.url = url;
+    this.firstName = user.name.split(' ')[0];
   }
 
   createNewTransport() {
     if (process.env.NODE_ENV === 'production') {
-      // Integrate sendgrid
       return 1;
     }
 
@@ -27,9 +26,8 @@ module.exports = class Email {
     });
   }
 
-  send(template, subject) {
-    // Render file as html
-    const html = pug.renderFile(path.join(__dirname, `../views/${template}.pug`), {
+  async send(template, subject) {
+    const html = pug.renderFile(path.join(__dirname, `../templates/email/${template}.pug`), {
       firstName: this.firstName,
       url: this.url,
       subject,
@@ -46,10 +44,14 @@ module.exports = class Email {
     };
 
     // Create transport and send email
-    this.createNewTransport().sendMail(mailOptions);
+    await this.createNewTransport().sendMail(mailOptions);
   }
 
-  sendWelcome() {
-    this.send('welcome', "Welcome to the Natours\' family");
+  async sendWelcomeEmail() {
+    await this.send('welcome', "Welcome to Natours' family!");
+  }
+
+  async sendPasswordReset() {
+    await this.send('passwordReset', 'Your password reset link (valid for only 10 minutes)');
   }
 };
